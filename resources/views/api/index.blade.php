@@ -1,13 +1,16 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('API Tokens') }}
-        </h2>
-    </x-slot>
-
-    <div>
-        <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
-            @livewire('api.api-token-manager')
+@extends('layouts.app')
+@section('content')
+    @if(Auth::check())
+        <div class="row">
+            Estas logueado
         </div>
-    </div>
-</x-app-layout>
+    @else
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h5> Acceso no válido. Favor de iniciar sesión.</h5>
+                </div>
+            </div>
+        </div>
+    @endif
+@endsection

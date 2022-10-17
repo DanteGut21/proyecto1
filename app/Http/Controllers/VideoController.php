@@ -5,8 +5,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
-use App\Video;
-use App\Comment;
+use App\Models\Video;
+use App\Models\Comment;
 
 
 class VideoController extends Controller
@@ -18,7 +18,9 @@ class VideoController extends Controller
      */
     public function index()
     {
-        //
+        //Abre la consulta de los archivos
+        $videos = VsVideo::where('activo','=',1)->get();
+        return view('video.index')->with('video',$videos);
     }
 
     /**
@@ -37,10 +39,44 @@ class VideoController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        //
+    public function store(Request $request){
+        //Validación de formulario
+        $validateData = $this->validate($request, [
+            'title' => 'required|min:5',
+            'description' => 'required',
+            'video' => 'mimes:mp4'
+        ]);
+        $video = new Video();
+        $user = \Auth::user();
+        $video->user_id = $user->id;
+        $video->title = $request->input('title');
+        $video->description = $request->input('description');
+
+        //Subida de la miniatura
+        $image = $request->file('image');
+        if($image){
+            $image_path = time().$image->getClientOriginalName();
+            \Storage::disk('images')
+                ->put($image_path, \File::get($image));
+
+            $video->image =$image_path;
+        }
+
+        //Subida del video
+
+        $video_file = $request->file('video');
+        if($video_file){
+            $video_path = time().$video_file->getClientOriginalName();
+            \Storage::disk('videos')->put($video_path, \File::get($video_file));
+            $video->video_path = $video_path;
+        }
+
+        $video->save();
+        return redirect()->route('home')->with(array(
+            'message'=> 'El video se ha subido correctamente'
+        ));
     }
+
 
     /**
      * Display the specified resource.
@@ -62,6 +98,13 @@ class VideoController extends Controller
     public function edit($id)
     {
         //
+        $user = \Auth::user();
+        $video = Video::find($id);
+        if($user && $video->user_id == $user->id) {
+            return view('videos.edit', array('video' => $video));
+        }else{
+            return redirect()->route('home');
+        }
     }
 
     /**
@@ -74,6 +117,39 @@ class VideoController extends Controller
     public function update(Request $request, $id)
     {
         //
+        //Validación de formulario
+        $validateData = $this->validate($request, [
+            'title' => 'required|min:5',
+            'description' => 'required',
+            'video' => 'mimes:mp4'
+        ]);
+        $video = Video::find($id);
+        $video->title = $request->input('title');
+        $video->description = $request->input('description');
+
+        //Subida de la miniatura
+        $image = $request->file('image');
+        if($image){
+            $image_path = time().$image->getClientOriginalName();
+            \Storage::disk('images')
+                ->put($image_path, \File::get($image));
+
+            $video->image =$image_path;
+        }
+
+        //Subida del video
+
+        $video_file = $request->file('video');
+        if($video_file){
+            $video_path = time().$video_file->getClientOriginalName();
+            \Storage::disk('videos')->put($video_path, \File::get($video_file));
+            $video->video_path = $video_path;
+        }
+
+        $video->update();
+        return redirect()->route('home')->with(array(
+            'message'=> 'El video se ha subido correctamente'
+        ));
     }
 
     /**
