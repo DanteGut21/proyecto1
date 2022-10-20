@@ -41,3 +41,8 @@ Route::resource('videos', '\App\Http\Controllers\VideoController');
     'uses' => 'HomeController@index'
 ));*/
 
+Route::get('/crear-video',array(
+    'as' => 'createVideo',
+    'middleware' => 'auth',
+    'uses' => 'VideoController@createVideo'
+));

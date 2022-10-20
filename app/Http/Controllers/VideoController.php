@@ -30,7 +30,7 @@ class VideoController extends Controller
      */
     public function create(){
         //Mostrar el formulario de captura
-        return view('videos.create');
+        return view('video.create');
     }
 
     /**
