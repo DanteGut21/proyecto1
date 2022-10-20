@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('views.layouts.app')
 @section('content')
     <div class="container">
         <div class="row">
@@ -23,7 +23,8 @@
                 </div>
                 <div class="form-group">
                     <label for="description">Descripción</label>
-                    <textarea class="form-control" id="description" name="description" value="{{old('description')}}"></textarea>
+                    <textarea class="form-control" id="description" name="description"
+                              value="{{old('description')}}"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="image">Miniaturas</label>
