@@ -1,25 +1,24 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <div class="row">
-            @if(session('message'))
-                <div class="alert alert-success">
-                    {{session('message')}}
-                </div>
-            @endif
-        </div>
-        <ul id="video-list">
-            @foreach($videos as $video)
-                <li class="video-item col-md4-pull-left">
-                    <!-- imagen del video -->
-                    <div class="data">
-                        <h4> {{$video->title}}</h4>
-                    </div>
-                </li>
-            @endforeach
-        </ul>
-        {{$videos->links()}}
-    </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">{{ __('Dashboard') }}</div>
 
+                <div class="card-body">
+                    <h3>Hola mundo</h3>
+                    @if (session('status'))
+                        <div class="alert alert-success" role="alert">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
+                    {{ __('You are logged in!') }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

@@ -1,13 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\Video;
-use App\Models\Comment;
 
+use File;
+use App\Models\Vsvideo;
+use App\Models\Video;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class VideoController extends Controller
 {
@@ -19,24 +19,14 @@ class VideoController extends Controller
     public function index()
     {
         //Carga la página de inicio del objeto
-        $vs_videos = VsVideo::where('status','=',1)->get();
+        $vs_videos = VsVideo :: where ('active', '=', 1) -> get() ;
         $cont = VsVideo::count();
-        $videos = $this->cargarDT($vs_videos );
-        return view('videos.index')->with('videos',$videos)->with('cont', $cont);
-
+        $videos = $this->cargarDT($vs_videos);
+        return view(view:'videos.index')-> with('videos', $videos)->with('cont', $cont);
+        
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create(){
-        //Mostrar el formulario de captura
-        return view('video.create');
-    }
-
-    public function cargarDT($consulta)
+public function cargarDT($consulta)
     {
         $videos = [];
 
@@ -44,6 +34,7 @@ class VideoController extends Controller
 
             $ruta = "eliminar".$value['id'];
             $eliminar = route('delete-video', $value['id']);
+            
             $actualizar =  route('videos.edit', $value['id']);
 
             $acciones = '
@@ -58,9 +49,7 @@ class VideoController extends Controller
 
                     </div>
                 </div>
-
-
-                <!-- Modal -->
+<!-- Modal -->
             <div class="modal fade" id="'.$ruta.'" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -73,7 +62,9 @@ class VideoController extends Controller
                         <small>
                             '.$value['id'].', '.$value['title'].'                 </small>
                       </p>
-type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
 
                       <a href="'.$eliminar.'" type="button" class="btn btn-danger">Eliminar</a>
                         </div>
@@ -82,8 +73,7 @@ type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
 
             ';
-
-            $videos[$key] = array(
+$videos[$key] = array(
                 $acciones,
                 $value['id'],
                 $value['title'],
@@ -101,50 +91,59 @@ type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
     }
 
 
+    /**m run dev
+
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        // mostrar el formulario de captura
+        return view('videos.create');
+    }
+
     /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request){
-        //Validación de formulario
+    public function store(Request $request)
+    {
+        //guarda un nuevo registro apartir de un formulario de nuevo registro
+        //validacion del formulario
         $validateData = $this->validate($request, [
             'title' => 'required|min:5',
             'description' => 'required',
             'video' => 'mimes:mp4'
         ]);
         $video = new Video();
-        $user = \Auth::user();
+        $user = Auth::user();
         $video->user_id = $user->id;
-        $video->title = $request->input('title');
-        $video->description = $request->input('description');
-
+        $video->title = $request->input(key:'title');
+        $video->description = $request->input(key:'description');
         //Subida de la miniatura
         $image = $request->file('image');
-        if($image){
-            $image_path = time().$image->getClientOriginalName();
-            \Storage::disk('images')
-                ->put($image_path, \File::get($image));
-
-            $video->image =$image_path;
-        }
-
+        if ($image) {
+            $image_path = time() . $image->getClientOriginalName();
+            \Storage::disk('images')->put($image_path, \File::get($image));
+            $video->image = $image_path;
+        } 
         //Subida del video
-
         $video_file = $request->file('video');
-        if($video_file){
-            $video_path = time().$video_file->getClientOriginalName();
+        if ($video_file) {
+            $video_path = time() . $video_file->getClientOriginalName();
             \Storage::disk('videos')->put($video_path, \File::get($video_file));
             $video->video_path = $video_path;
         }
 
         $video->save();
-        return redirect()->route('home')->with(array(
-            'message'=> 'El video se ha subido correctamente'
+        return redirect()->route(route:'home')->with(array(
+            'message' => 'El video se ha subido correctamente'
         ));
-    }
 
+    }
 
     /**
      * Display the specified resource.
@@ -154,7 +153,7 @@ type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
      */
     public function show($id)
     {
-        //
+        //muestra un registro solamente
     }
 
     /**
@@ -165,12 +164,12 @@ type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
      */
     public function edit($id)
     {
-        //
-        $user = \Auth::user();
+        //abri el formulario de edicion 
+        $user = Auth::user();
         $video = Video::find($id);
-        if($user && $video->user_id == $user->id) {
+        if ($user && $video->user_id == $user->id) {
             return view('videos.edit', array('video' => $video));
-        }else{
+        } else {
             return redirect()->route('home');
         }
     }
@@ -184,39 +183,33 @@ type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
      */
     public function update(Request $request, $id)
     {
-        //
-        //Validación de formulario
+        //guarda la modificacion de una edicion 
         $validateData = $this->validate($request, [
             'title' => 'required|min:5',
             'description' => 'required',
             'video' => 'mimes:mp4'
         ]);
-        $video = Video::find($id);
-        $video->title = $request->input('title');
-        $video->description = $request->input('description');
-
+        $video =Video:: find($id);
+        $video->title = $request->input(key: 'title');
+        $video->description = $request->input(key: 'description');
         //Subida de la miniatura
         $image = $request->file('image');
-        if($image){
-            $image_path = time().$image->getClientOriginalName();
-            \Storage::disk('images')
-                ->put($image_path, \File::get($image));
-
-            $video->image =$image_path;
+        if ($image) {
+            $image_path = time() . $image->getClientOriginalName();
+            \Storage::disk('images')->put($image_path, \File::get($image));
+            $video->image = $image_path;
         }
-
         //Subida del video
-
         $video_file = $request->file('video');
-        if($video_file){
-            $video_path = time().$video_file->getClientOriginalName();
+        if ($video_file) {
+            $video_path = time() . $video_file->getClientOrsiginalName();
             \Storage::disk('videos')->put($video_path, \File::get($video_file));
             $video->video_path = $video_path;
         }
 
         $video->update();
-        return redirect()->route('home')->with(array(
-            'message'=> 'El video se ha subido correctamente'
+        return redirect()->route(route: 'videos.index')->with(array(
+            'message' => 'El video se ha subido correctamente'
         ));
     }
 
@@ -228,18 +221,19 @@ type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
      */
     public function destroy($id)
     {
-        //
+        //Borrado
     }
 
-    public function delete_video($video_id){
+    public function delete_video($video_id)
+    {
         $video = Video::find($video_id);
-        if($video){
-            $video->status = 0;
+        if ($video) {
+            $video->active = 0;
             $video->update();
             return redirect()->route('videos.index')->with(array(
                 "message" => "El video se ha eliminado correctamente"
             ));
-        }else{
+        } else {
             return redirect()->route('videos.index')->with(array(
                 "message" => "El video que trata de eliminar no existe"
             ));
